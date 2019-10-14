@@ -22,12 +22,12 @@ function checkSwap($descIndexes, $arr) {
     if(count($descIndexes) == 2)
     {
         $first = $descIndexes[0];
-        $second = $descIndexes[2];
+        $second = $descIndexes[1];
         $firstCheck = (isset($arr[$first - 2]) ? $arr[$first - 2] < $arr[$second] : true) && $arr[$second] < $arr[$first];
         $secondCheck = $arr[$second - 1] < $arr[$first - 1] && (isset($arr[$second + 1]) ? $arr[$first - 1] < $arr[$second + 1] : true);
         if($firstCheck && $secondCheck)
         {
-            return [$first, $second];
+            return [$first - 1, $second];
         }
         else
         {
@@ -78,31 +78,89 @@ function checkReverse($descIndexes, $arr) {
     }
 }
 
+function generateTest() {
+    for($i = 0; $i < rand(10, 100); $i++)
+    {
+        $arr[] = rand(10, 100);
+    }
+    $arr = array_unique($arr);
+
+    $case = rand(0, 2);
+    if($case == 0)// impossible
+    {
+        $result = [$arr, "no\n"];
+    }
+    elseif($case == 1)// swap
+    {
+        sort($arr);
+        $start = rand(0, count($arr) - 1);
+        $finish = $start;
+        while($finish == $start) $finish = rand(0, count($arr) - 1);
+
+        $tmp = $arr[$start];
+        $arr[$start] = $arr[$finish];
+        $arr[$finish] = $tmp;
+
+        $result = [$arr, "yes\nswap ".(min($start, $finish)+1)." ".(max($start, $finish)+1)."\n"];
+    }
+    else// reverse
+    {
+        sort($arr);
+        $start = rand(0, count($arr) - 1);
+        $finish = $start;
+        while($finish == $start) $finish = rand(0, count($arr) - 1);
+
+        $tmp = $start;
+        $start = min($start, $finish);
+        $finish = max($finish, $tmp);
+
+        $firstPart = array_slice($arr, 0, $start);
+        $lastPart = array_slice($arr, $finish + 1);
+        $reversedPart = array_reverse(array_slice($arr, $start, $finish - $start + 1));
+        $arr = array_merge($firstPart, $reversedPart, $lastPart);
+
+        $result = [$arr, "yes\nreverse ".(min($start, $finish)+1)." ".(max($start, $finish)+1)."\n"];
+    }
+
+    yield $result;
+}
+
 // Complete the almostSorted function below.
 function almostSorted($arr) {
     $descIndexes = getDescIndexes($arr);
     if(empty($descIndexes))
     {
-        echo "yes\n";
-        return;
+        return "yes\n";
     }
     $swap = checkSwap($descIndexes, $arr);
     if($swap)
     {
-        echo "yes\nswap ".($swap[0] + 1)." ".($swap[1] + 1)."\n";
-        return;
+        return "yes\nswap ".($swap[0] + 1)." ".($swap[1] + 1)."\n";
     }
 
     $reverse = checkReverse($descIndexes, $arr);
     if($reverse)
     {
-        echo "yes\nreverse ".($reverse[0] + 1)." ".($reverse[1] + 1)."\n";
-        return;
+        return "yes\nreverse ".($reverse[0] + 1)." ".($reverse[1] + 1)."\n";
     }
 
-    echo "no\n";
-    return;
+    return "no\n";
 }
+
+//foreach(generateTest() as $testCase)
+//{
+//    $result = almostSorted($testCase[0]);
+//    if($result != $testCase[1])
+//    {
+//        echo "TEST CASE\n";
+//        echo implode(' ', $testCase[0])."\n";
+//        echo "RESULT\n";
+//        echo $result;
+//        echo "EXPECTED\n";
+//        echo $testCase[1]."\n";
+//        die();
+//    }
+//}
 
 $stdin = fopen("php://stdin", "r");
 
@@ -112,6 +170,6 @@ fscanf($stdin, "%[^\n]", $arr_temp);
 
 $arr = array_map('intval', preg_split('/ /', $arr_temp, -1, PREG_SPLIT_NO_EMPTY));
 
-almostSorted($arr);
+echo almostSorted($arr);
 
 fclose($stdin);
